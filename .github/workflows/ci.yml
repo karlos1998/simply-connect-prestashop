@@ -1,0 +1,15 @@
+name: CI
+on: [push, pull_request]
+permissions: {contents: read}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy: {matrix: {php: ['8.1', '8.3']}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: {php-version: '${{ matrix.php }}', extensions: 'curl, sodium, zip', coverage: none}
+      - run: composer install --no-interaction --prefer-dist
+      - run: composer check
+      - run: find . -path ./vendor -prune -o -path ./build -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+      - run: php scripts/build-release.php
